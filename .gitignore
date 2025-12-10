@@ -33,7 +33,6 @@ Thumbs.db
 .env.production
 
 # Project specific
-backend/uploads/
-backend/generated_pdfs/
-backend/documents.db
+backend/files/
+backend/database/
 
