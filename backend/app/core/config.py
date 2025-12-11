@@ -12,11 +12,16 @@ class Settings(BaseSettings):
     APP_VERSION: str = "1.0.0"
     DEBUG: bool = True
     
-    # 数据库配置
-    DATABASE_URL: str = "sqlite:///./documents.db"
-    
     # 文件存储配置
     BASE_DIR: Path = Path(__file__).resolve().parent.parent.parent
+    
+    # 数据库配置
+    @property
+    def DATABASE_URL(self) -> str:
+        """获取数据库URL"""
+        db_path = self.BASE_DIR / "database" / "sqlite" / "documents_collecting.db"
+        db_path.parent.mkdir(parents=True, exist_ok=True)
+        return f"sqlite:///{db_path.as_posix()}"
     UPLOAD_DIR: str = "uploads"
     PDF_OUTPUT_DIR: str = "generated_pdfs"
     MAX_UPLOAD_SIZE: int = 104857600  # 100MB

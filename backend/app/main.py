@@ -2,11 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
-from app.core.database import init_db
 from app.api import api_router
-
-# 初始化数据库
-init_db()
 
 # 创建 FastAPI 应用
 app = FastAPI(
