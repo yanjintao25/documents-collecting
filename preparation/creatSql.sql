@@ -5,11 +5,14 @@
 -- 启用外键约束
 PRAGMA foreign_keys = ON;
 
--- 文章表
-CREATE TABLE articles (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,  -- 文章ID，主键
-    title VARCHAR(255) NOT NULL,  -- 文章标题
-    save_path VARCHAR(500) NOT NULL,  -- 文章内容保存路径
+-- 文件表
+CREATE TABLE documents (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,  -- 文件ID，主键
+    title VARCHAR(255) NOT NULL,  -- 文件标题
+    save_path VARCHAR(500) NOT NULL,  -- 文件内容保存路径
+    file_size INTEGER NOT NULL,  -- 文件大小
+    file_type VARCHAR(100) NOT NULL,  -- 文件类型
+    pdf_file_size INTEGER NOT NULL,  -- PDF文件大小
     pdf_save_path VARCHAR(500) DEFAULT NULL,  -- PDF文件保存路径
     introduction TEXT,  -- 文章简介
     write_time TEXT DEFAULT NULL,  -- 写作时间（SQLite 使用 TEXT 存储日期时间）
@@ -62,24 +65,24 @@ CREATE TABLE tags (
 );
 
 -- 文章和标签的关联表
-CREATE TABLE article_tags (
+CREATE TABLE document_tags (
     id INTEGER PRIMARY KEY AUTOINCREMENT,  -- 关联ID
-    article_id INTEGER NOT NULL,  -- 文章ID
+    document_id INTEGER NOT NULL,  -- 文件ID
     tag_id INTEGER NOT NULL,  -- 标签ID
     create_time TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,  -- 创建时间
-    UNIQUE (article_id, tag_id),  -- 文章和标签组合唯一
-    FOREIGN KEY (article_id) REFERENCES articles(id) ON DELETE CASCADE,
+    UNIQUE (document_id, tag_id),  -- 文件和标签组合唯一
+    FOREIGN KEY (document_id) REFERENCES documents(id) ON DELETE CASCADE,
     FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE
 );
 
 -- ==================== 索引 ====================
 
 -- 文章表索引
-CREATE INDEX idx_articles_status ON articles(status);
-CREATE INDEX idx_articles_category_id ON articles(category_id);
-CREATE INDEX idx_articles_delete_flag ON articles(delete_flag);
-CREATE INDEX idx_articles_create_time ON articles(create_time);
-CREATE INDEX idx_articles_update_time ON articles(update_time);
+CREATE INDEX idx_documents_status ON documents(status);
+CREATE INDEX idx_documents_category_id ON documents(category_id);
+CREATE INDEX idx_documents_delete_flag ON documents(delete_flag);
+CREATE INDEX idx_documents_create_time ON documents(create_time);
+CREATE INDEX idx_documents_update_time ON documents(update_time);
 
 -- 用户表索引
 CREATE UNIQUE INDEX uk_users_phone ON users(phone) WHERE phone IS NOT NULL;  -- 手机号唯一索引（忽略 NULL）
@@ -102,18 +105,18 @@ CREATE INDEX idx_tags_create_time ON tags(create_time);
 CREATE INDEX idx_tags_update_time ON tags(update_time);
 
 -- 文章-标签关联表索引
-CREATE INDEX idx_article_tags_article_id ON article_tags(article_id);
-CREATE INDEX idx_article_tags_tag_id ON article_tags(tag_id);
+CREATE INDEX idx_document_tags_document_id ON document_tags(document_id);
+CREATE INDEX idx_document_tags_tag_id ON document_tags(tag_id);
 
 -- ==================== 触发器：自动更新 update_time ====================
 
--- 文章表更新触发器
-CREATE TRIGGER update_articles_timestamp 
-AFTER UPDATE ON articles
+-- 文件表更新触发器
+CREATE TRIGGER update_documents_timestamp 
+AFTER UPDATE ON documents
 FOR EACH ROW
 WHEN NEW.update_time = OLD.update_time
 BEGIN
-    UPDATE articles SET update_time = CURRENT_TIMESTAMP WHERE id = NEW.id;
+    UPDATE documents SET update_time = CURRENT_TIMESTAMP WHERE id = NEW.id;
 END;
 
 -- 用户表更新触发器

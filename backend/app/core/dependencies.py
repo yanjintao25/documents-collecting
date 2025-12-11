@@ -3,8 +3,8 @@ from sqlalchemy.orm import Session
 from typing import Generator
 
 from app.core.database import get_db
-from app.models.document import Document
-from app.models.tag import Tag
+from app.models.document_model import Document
+from app.models.tag_model import Tag
 
 
 def get_database() -> Generator[Session, None, None]:

@@ -8,6 +8,7 @@ from app.core.config import settings
 from app.core.exceptions import DocumentNotFoundError, FileNotFoundError
 from app.repositories.document_repository import DocumentRepository
 from app.schemas.document import DocumentCreate, DocumentUpdate, DocumentResponse
+from app.models.document_model import Document
 
 
 class DocumentService:
@@ -58,14 +59,27 @@ class DocumentService:
             tag_ids=tag_ids,
         )
         
-        return DocumentResponse.model_validate(document)
+        # 手动添加标签信息
+        tags = self.repository.get_document_tags(document.id)
+        document_dict = {
+            **{c.name: getattr(document, c.name) for c in document.__table__.columns},
+            "tags": tags,
+        }
+        return DocumentResponse.model_validate(document_dict)
     
     def get_document(self, document_id: int) -> DocumentResponse:
         """获取文档"""
         document = self.repository.get_by_id(document_id)
         if not document:
             raise DocumentNotFoundError(document_id)
-        return DocumentResponse.model_validate(document)
+        
+        # 手动添加标签信息
+        tags = self.repository.get_document_tags(document_id)
+        document_dict = {
+            **{c.name: getattr(document, c.name) for c in document.__table__.columns},
+            "tags": tags,
+        }
+        return DocumentResponse.model_validate(document_dict)
     
     def get_documents(
         self,
@@ -74,7 +88,16 @@ class DocumentService:
     ) -> List[DocumentResponse]:
         """获取文档列表"""
         documents = self.repository.get_all(skip=skip, limit=limit)
-        return [DocumentResponse.model_validate(doc) for doc in documents]
+        result = []
+        for doc in documents:
+            # 手动添加标签信息
+            tags = self.repository.get_document_tags(doc.id)
+            document_dict = {
+                **{c.name: getattr(doc, c.name) for c in doc.__table__.columns},
+                "tags": tags,
+            }
+            result.append(DocumentResponse.model_validate(document_dict))
+        return result
     
     def update_document(
         self,
@@ -87,7 +110,14 @@ class DocumentService:
             raise DocumentNotFoundError(document_id)
         
         updated_document = self.repository.update(document, update_data)
-        return DocumentResponse.model_validate(updated_document)
+        
+        # 手动添加标签信息
+        tags = self.repository.get_document_tags(updated_document.id)
+        document_dict = {
+            **{c.name: getattr(updated_document, c.name) for c in updated_document.__table__.columns},
+            "tags": tags,
+        }
+        return DocumentResponse.model_validate(document_dict)
     
     def delete_document(self, document_id: int) -> None:
         """删除文档"""
@@ -121,5 +151,14 @@ class DocumentService:
             tag_ids=tag_ids,
             file_type=file_type,
         )
-        return [DocumentResponse.model_validate(doc) for doc in documents]
+        result = []
+        for doc in documents:
+            # 手动添加标签信息
+            tags = self.repository.get_document_tags(doc.id)
+            document_dict = {
+                **{c.name: getattr(doc, c.name) for c in doc.__table__.columns},
+                "tags": tags,
+            }
+            result.append(DocumentResponse.model_validate(document_dict))
+        return result
 
