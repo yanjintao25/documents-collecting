@@ -18,11 +18,11 @@ class DocumentService:
         self.repository = DocumentRepository(db)
         self.db = db
     
-    def upload_document(
+    async def upload_document(
         self,
         file: UploadFile,
         description: Optional[str] = None,
-        tag_ids: Optional[List[int]] = None,
+        category_id: Optional[int] = None,
     ) -> DocumentResponse:
         """
         上传文档
@@ -30,7 +30,7 @@ class DocumentService:
         Args:
             file: 上传的文件
             description: 文档描述
-            tag_ids: 标签ID列表
+            category_id: 分类ID
             
         Returns:
             DocumentResponse: 文档响应对象
@@ -42,24 +42,35 @@ class DocumentService:
         
         # 保存文件
         with open(file_path, "wb") as buffer:
-            content = file.file.read()
+            content = await file.read()
             buffer.write(content)
         
         # 获取文件大小
         file_size = file_path.stat().st_size
         
+        # 查询分类名称（如果提供了分类ID）
+        category_name = None
+        if category_id:
+            from app.models.category_model import Category
+            category = self.db.query(Category).filter(
+                Category.id == category_id,
+                Category.delete_flag == 0
+            ).first()
+            if category:
+                category_name = category.name
+        
         # 创建文档记录
         document = self.repository.create(
-            filename=filename,
-            original_filename=file.filename,
-            file_path=str(file_path),
+            title=file.filename,  # 使用原始文件名作为标题
+            save_path=str(file_path),
             file_size=file_size,
             file_type=file.content_type or "application/octet-stream",
-            description=description,
-            tag_ids=tag_ids,
+            introduction=description,
+            category_id=category_id,
+            category_name=category_name,
         )
         
-        # 手动添加标签信息
+        # 初始写入的记录不包含标签信息
         tags = self.repository.get_document_tags(document.id)
         document_dict = {
             **{c.name: getattr(document, c.name) for c in document.__table__.columns},
@@ -133,7 +144,7 @@ class DocumentService:
         if not document:
             raise DocumentNotFoundError(document_id)
         
-        file_path = Path(document.file_path)
+        file_path = Path(document.save_path)
         if not file_path.exists():
             raise FileNotFoundError(str(file_path))
         

@@ -14,7 +14,7 @@ router = APIRouter(prefix="/documents", tags=["文档管理"])
 async def upload_document(
     file: UploadFile = File(...),
     description: Optional[str] = Form(None),
-    tag_ids: Optional[str] = Form(None),  # 接收逗号分隔的标签ID字符串
+    category_id: Optional[int] = Form(None),
     db: Session = Depends(get_database),
 ):
     """
@@ -22,19 +22,14 @@ async def upload_document(
     
     - **file**: 上传的文件
     - **description**: 文档描述（可选）
-    - **tag_ids**: 标签ID，逗号分隔（可选）
+    - **category_id**: 分类ID（可选）
     """
     service = DocumentService(db)
     
-    # 解析标签ID
-    tag_id_list = None
-    if tag_ids:
-        tag_id_list = [int(tid) for tid in tag_ids.split(",") if tid.strip()]
-    
-    return service.upload_document(
+    return await service.upload_document(
         file=file,
         description=description,
-        tag_ids=tag_id_list,
+        category_id=category_id,
     )
 
 
@@ -73,12 +68,15 @@ def download_document(
     service = DocumentService(db)
     file_path = service.get_file_path(document_id)
     
-    # 获取原始文件名
+    # 获取文档信息
     document = service.get_document(document_id)
+    
+    # 从 title 或 save_path 提取文件名
+    filename = document.title if hasattr(document, 'title') else file_path.name
     
     return FileResponse(
         path=str(file_path),
-        filename=document.original_filename,
+        filename=filename,
         media_type=document.file_type,
     )
 

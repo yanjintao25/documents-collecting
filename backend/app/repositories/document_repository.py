@@ -15,50 +15,46 @@ class DocumentRepository:
     
     def create(
         self,
-        filename: str,
-        original_filename: str,
-        file_path: str,
+        title: str,
+        save_path: str,
         file_size: int,
         file_type: str,
-        description: Optional[str] = None,
-        tag_ids: Optional[List[int]] = None,
+        introduction: Optional[str] = None,
+        category_id: Optional[int] = None,
+        category_name: Optional[str] = None,
     ) -> Document:
         """
         创建文档
         
         Args:
-            filename: 存储文件名
-            original_filename: 原始文件名
-            file_path: 文件路径
+            title: 文件标题
+            save_path: 文件保存路径
             file_size: 文件大小
             file_type: 文件类型
-            description: 描述
-            tag_ids: 标签ID列表
+            introduction: 文章简介
+            category_id: 分类ID
+            category_name: 分类名称
             
         Returns:
             Document: 创建的文档对象
         """
         document = Document(
-            filename=filename,
-            original_filename=original_filename,
-            file_path=file_path,
+            title=title,
+            save_path=save_path,
             file_size=file_size,
             file_type=file_type,
-            description=description,
+            pdf_file_size=0,
+            pdf_save_path=None,
+            introduction=introduction,
+            upload_user_name="默认用户",
+            upload_user_id="001",
+            category_id=category_id,
+            category_name=category_name,
         )
         
         self.db.add(document)
         self.db.commit()
         self.db.refresh(document)
-        
-        # 通过关系表添加标签关联
-        if tag_ids:
-            from app.models.document_model import document_tags
-            for tag_id in tag_ids:
-                self.db.execute(
-                    document_tags.insert().values(document_id=document.id, tag_id=tag_id)
-                )
-            self.db.commit()
         
         return document
     
@@ -114,7 +110,7 @@ class DocumentRepository:
     def delete(self, document: Document) -> None:
         """删除文档"""
         # 删除文件
-        file_path = Path(document.file_path)
+        file_path = Path(document.save_path)
         if file_path.exists():
             file_path.unlink()
         
@@ -132,9 +128,8 @@ class DocumentRepository:
         
         if keyword:
             keyword_filter = or_(
-                Document.filename.contains(keyword),
-                Document.original_filename.contains(keyword),
-                Document.description.contains(keyword),
+                Document.title.contains(keyword),
+                Document.introduction.contains(keyword),
             )
             query = query.filter(keyword_filter)
         

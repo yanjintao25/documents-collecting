@@ -57,11 +57,11 @@ class PDFService:
             
             # 添加所有 PDF 文件
             for doc in pdf_documents:
-                file_path = Path(doc.file_path)
+                file_path = Path(doc.save_path)
                 if file_path.exists():
                     merger.append(str(file_path))
                 else:
-                    raise PDFGenerationError(f"文件不存在: {doc.file_path}")
+                    raise PDFGenerationError(f"文件不存在: {doc.save_path}")
             
             # 生成输出文件名
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
