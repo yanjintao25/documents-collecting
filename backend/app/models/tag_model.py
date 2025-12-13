@@ -15,10 +15,10 @@ class Tag(BaseModel):
     
     __table_args__ = (
         UniqueConstraint("name", "delete_flag", name="uq_tags_name_delete_flag", comment="标签名称唯一索引（考虑删除状态）"),
-        Index("idx_tags_status", "status", comment="状态索引"),
-        Index("idx_tags_delete_flag", "delete_flag", comment="删除标志索引"),
-        Index("idx_tags_color", "color", comment="颜色索引"),
-        Index("idx_tags_create_time", "create_time", comment="创建时间索引"),
-        Index("idx_tags_update_time", "update_time", comment="更新时间索引"),
+        Index("idx_tags_status", "status"),
+        Index("idx_tags_delete_flag", "delete_flag"),
+        Index("idx_tags_color", "color"),
+        Index("idx_tags_create_time", "create_time"),
+        Index("idx_tags_update_time", "update_time"),
     )
 

@@ -13,8 +13,8 @@ document_tags = Table(
     Column("tag_id", Integer, ForeignKey("tags.id", ondelete="CASCADE"), nullable=False, comment="标签ID"),
     Column("create_time", DateTime(timezone=True), server_default=func.now(), nullable=False, comment="创建时间"),
     UniqueConstraint("document_id", "tag_id", name="uq_document_tags_document_tag", comment="文件和标签组合唯一"),
-    Index("idx_document_tags_document_id", "document_id", comment="文档ID索引"),
-    Index("idx_document_tags_tag_id", "tag_id", comment="标签ID索引"),
+    Index("idx_document_tags_document_id", "document_id"),
+    Index("idx_document_tags_tag_id", "tag_id"),
 )
 
 
@@ -41,10 +41,10 @@ class Document(BaseModel):
     delete_flag = Column(Integer, nullable=False, default=0, comment="删除标志：0-未删除，1-已删除")
     
     __table_args__ = (
-        Index("idx_documents_status", "status", comment="状态索引"),
-        Index("idx_documents_category_id", "category_id", comment="分类ID索引"),
-        Index("idx_documents_delete_flag", "delete_flag", comment="删除标志索引"),
-        Index("idx_documents_create_time", "create_time", comment="创建时间索引"),
-        Index("idx_documents_update_time", "update_time", comment="更新时间索引"),
+        Index("idx_documents_status", "status"),
+        Index("idx_documents_category_id", "category_id"),
+        Index("idx_documents_delete_flag", "delete_flag"),
+        Index("idx_documents_create_time", "create_time"),
+        Index("idx_documents_update_time", "update_time"),
     )
 
