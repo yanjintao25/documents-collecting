@@ -213,10 +213,7 @@ yarn dev
 
 项目使用 SQLite 数据库，数据库文件会自动创建在 `backend/documents.db`
 
-首次运行时会自动创建数据表：
-- `documents` - 文档表
-- `tags` - 标签表
-- `document_tags` - 文档标签关联表
+首次运行时：
 
 ## 文件存储
 

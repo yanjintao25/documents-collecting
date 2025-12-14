@@ -18,6 +18,36 @@ class DocumentService:
         self.repository = DocumentRepository(db)
         self.db = db
     
+    def _document_to_response(self, document: Document, tags: List = None) -> DocumentResponse:
+        """
+        将数据库文档模型转换为响应对象
+        只包含客户端需要的字段，排除内部字段（如 delete_flag, save_path 等）
+        """
+        from app.schemas.tag import TagResponse
+        
+        tag_list = [TagResponse.model_validate(tag) for tag in (tags or [])]
+        
+        return DocumentResponse(
+            id=document.id,
+            title=document.title,
+            file_size=document.file_size,
+            file_type=document.file_type,
+            pdf_file_size=document.pdf_file_size,
+            introduction=document.introduction,
+            write_time=document.write_time,
+            status=document.status,
+            upload_user_name=document.upload_user_name,
+            upload_user_id=document.upload_user_id,
+            update_user_name=document.update_user_name,
+            update_user_id=document.update_user_id,
+            category_id=document.category_id,
+            category_name=document.category_name,
+            create_time=document.create_time,
+            update_time=document.update_time,
+            description=document.introduction,  # description 会通过验证器从 introduction 同步
+            tags=tag_list,
+        )
+    
     async def upload_document(
         self,
         file: UploadFile,
@@ -69,14 +99,8 @@ class DocumentService:
             category_id=category_id,
             category_name=category_name,
         )
-        
-        # 初始写入的记录不包含标签信息
-        tags = self.repository.get_document_tags(document.id)
-        document_dict = {
-            **{c.name: getattr(document, c.name) for c in document.__table__.columns},
-            "tags": tags,
-        }
-        return DocumentResponse.model_validate(document_dict)
+
+        return self._document_to_response(document, tags=[])
     
     def get_document(self, document_id: int) -> DocumentResponse:
         """获取文档"""
@@ -84,13 +108,9 @@ class DocumentService:
         if not document:
             raise DocumentNotFoundError(document_id)
         
-        # 手动添加标签信息
+        # 获取标签信息
         tags = self.repository.get_document_tags(document_id)
-        document_dict = {
-            **{c.name: getattr(document, c.name) for c in document.__table__.columns},
-            "tags": tags,
-        }
-        return DocumentResponse.model_validate(document_dict)
+        return self._document_to_response(document, tags=tags)
     
     def get_documents(
         self,
@@ -101,13 +121,9 @@ class DocumentService:
         documents = self.repository.get_all(skip=skip, limit=limit)
         result = []
         for doc in documents:
-            # 手动添加标签信息
+            # 获取标签信息
             tags = self.repository.get_document_tags(doc.id)
-            document_dict = {
-                **{c.name: getattr(doc, c.name) for c in doc.__table__.columns},
-                "tags": tags,
-            }
-            result.append(DocumentResponse.model_validate(document_dict))
+            result.append(self._document_to_response(doc, tags=tags))
         return result
     
     def update_document(
@@ -122,13 +138,9 @@ class DocumentService:
         
         updated_document = self.repository.update(document, update_data)
         
-        # 手动添加标签信息
+        # 获取标签信息
         tags = self.repository.get_document_tags(updated_document.id)
-        document_dict = {
-            **{c.name: getattr(updated_document, c.name) for c in updated_document.__table__.columns},
-            "tags": tags,
-        }
-        return DocumentResponse.model_validate(document_dict)
+        return self._document_to_response(updated_document, tags=tags)
     
     def delete_document(self, document_id: int) -> None:
         """删除文档"""
@@ -164,12 +176,8 @@ class DocumentService:
         )
         result = []
         for doc in documents:
-            # 手动添加标签信息
+            # 获取标签信息
             tags = self.repository.get_document_tags(doc.id)
-            document_dict = {
-                **{c.name: getattr(doc, c.name) for c in doc.__table__.columns},
-                "tags": tags,
-            }
-            result.append(DocumentResponse.model_validate(document_dict))
+            result.append(self._document_to_response(doc, tags=tags))
         return result
 
