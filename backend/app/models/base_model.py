@@ -10,5 +10,5 @@ class BaseModel(Base):
     
     id = Column(Integer, primary_key=True, index=True)
     create_time = Column(DateTime(timezone=True), server_default=func.now(), nullable=False, comment="创建时间")
-    update_time = Column(DateTime(timezone=True), onupdate=func.now(), nullable=False, comment="更新时间")
+    update_time = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False, comment="更新时间")
 

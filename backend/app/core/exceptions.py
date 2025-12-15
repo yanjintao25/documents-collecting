@@ -63,3 +63,21 @@ class PDFGenerationError(BaseAPIException):
             detail=f"PDF 生成失败: {message}",
         )
 
+class CategoryNotFoundError(BaseAPIException):
+    """分类不存在异常"""
+    
+    def __init__(self, category_id: int) -> None:
+        super().__init__(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"分类 ID {category_id} 不存在",
+        )
+
+
+class CategoryAlreadyExistsError(BaseAPIException):
+    """分类已存在异常"""
+    
+    def __init__(self, category_name: str) -> None:
+        super().__init__(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"分类 '{category_name}' 已存在",
+        )
