@@ -62,6 +62,33 @@ class DocumentRepository:
         """通过ID获取文档"""
         return self.db.query(Document).filter(Document.id == document_id).first()
     
+    def update_pdf_info(
+        self,
+        document_id: int,
+        pdf_file_size: int,
+        pdf_save_path: str,
+    ) -> Optional[Document]:
+        """
+        更新文档的 PDF 信息
+        
+        Args:
+            document_id: 文档ID
+            pdf_file_size: PDF 文件大小
+            pdf_save_path: PDF 文件保存路径
+            
+        Returns:
+            Document: 更新后的文档对象，如果文档不存在返回 None
+        """
+        document = self.get_by_id(document_id)
+        if not document:
+            return None
+        
+        document.pdf_file_size = pdf_file_size
+        document.pdf_save_path = pdf_save_path
+        self.db.commit()
+        self.db.refresh(document)
+        return document
+    
     def get_document_tags(self, document_id: int) -> List:
         """获取文档的标签列表"""
         from app.models.document_model import document_tags

@@ -3,12 +3,16 @@ from fastapi import UploadFile
 from pathlib import Path
 from datetime import datetime
 from typing import List, Optional
+import asyncio
+import logging
 
 from app.core.config import settings
 from app.core.exceptions import DocumentNotFoundError, FileNotFoundError
 from app.repositories.document_repository import DocumentRepository
 from app.schemas.document import DocumentCreate, DocumentUpdate, DocumentResponse
 from app.models.document_model import Document
+
+logger = logging.getLogger(__name__)
 
 
 class DocumentService:
@@ -100,7 +104,64 @@ class DocumentService:
             category_name=category_name,
         )
 
+        # 启动后台任务：异步转换 PDF
+        # 如果文件已经是 PDF，跳过转换
+        if file_path.suffix.lower() != '.pdf':
+            asyncio.create_task(
+                self._convert_and_update_pdf(document.id, file_path)
+            )
+
         return self._document_to_response(document, tags=[])
+    
+    async def _convert_and_update_pdf(
+        self,
+        document_id: int,
+        file_path: Path,
+    ):
+        """
+        异步转换 PDF 并更新数据库
+        
+        Args:
+            document_id: 文档ID
+            file_path: 源文件路径
+        """
+        try:
+            logger.info(f"开始转换 PDF (document_id={document_id}, file={file_path})")
+            
+            # 导入 PDFService（避免循环导入）
+            from app.services.pdf_service import PDFService
+            pdf_service = PDFService(self.db)
+            
+            # 转换 PDF
+            pdf_path = await pdf_service.convert_to_pdf(file_path)
+            
+            if pdf_path and pdf_path.exists():
+                # 获取 PDF 文件大小
+                pdf_file_size = pdf_path.stat().st_size
+                
+                # 更新数据库
+                updated_document = self.repository.update_pdf_info(
+                    document_id=document_id,
+                    pdf_file_size=pdf_file_size,
+                    pdf_save_path=str(pdf_path),
+                )
+                
+                if updated_document:
+                    logger.info(
+                        f"PDF 转换成功 (document_id={document_id}, "
+                        f"pdf_size={pdf_file_size}, pdf_path={pdf_path})"
+                    )
+                else:
+                    logger.warning(f"PDF 转换成功但更新数据库失败 (document_id={document_id})")
+            else:
+                logger.warning(f"PDF 转换失败，未生成 PDF 文件 (document_id={document_id})")
+                
+        except Exception as e:
+            # 记录错误日志，但不影响主流程
+            logger.error(
+                f"PDF 转换失败 (document_id={document_id}): {str(e)}",
+                exc_info=True
+            )
     
     def get_document(self, document_id: int) -> DocumentResponse:
         """获取文档"""

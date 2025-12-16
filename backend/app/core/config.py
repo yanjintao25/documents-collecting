@@ -1,5 +1,5 @@
 from pydantic_settings import BaseSettings
-from typing import List
+from typing import List, Optional
 import os
 from pathlib import Path
 
@@ -25,6 +25,9 @@ class Settings(BaseSettings):
     UPLOAD_DIR: str = "uploads"
     PDF_OUTPUT_DIR: str = "generated_pdfs"
     MAX_UPLOAD_SIZE: int = 104857600  # 100MB
+    
+    # LibreOffice 配置
+    LIBREOFFICE_PATH: Optional[str] = None  # LibreOffice 可执行文件路径（可选，如果为空则自动检测）
     
     # CORS 配置
     CORS_ORIGINS: List[str] = [
