@@ -31,7 +31,7 @@ import { useRoute } from 'vue-router'
 
 const route = useRoute()
 const activeIndex = computed(() => route.path)
-const appTitle = import.meta.env.VITE_APP_TITLE || '文档管理系统'
+const appTitle = import.meta.env.VITE_APP_TITLE || '科技信息化文档共享应用'
 </script>
 
 <style scoped>
