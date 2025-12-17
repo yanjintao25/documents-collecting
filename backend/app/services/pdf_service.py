@@ -470,7 +470,8 @@ class PDFService:
             # 生成输出文件名
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             output_filename = f"{title}_{timestamp}.pdf"
-            output_path = settings.pdf_output_dir_path / output_filename
+            # 使用汇编目录存储汇编PDF（不保存到数据库，仅生成文件）
+            output_path = settings.pdf_compilation_dir_path / output_filename
             
             # 合并 PDF
             self.merge_pdfs(

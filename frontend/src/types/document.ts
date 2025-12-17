@@ -5,13 +5,22 @@ import { Tag } from './tag'
  */
 export interface Document {
   id: number
-  filename: string
-  original_filename: string
-  file_path: string
+  title: string
   file_size: number
   file_type: string
+  pdf_file_size: number
+  introduction: string | null
+  write_time: string | null
+  status: number
+  upload_user_name: string
+  upload_user_id: string
+  update_user_name: string | null
+  update_user_id: string | null
+  category_id: number | null
+  category_name: string | null
+  create_time: string
+  update_time: string
   description: string | null
-  upload_time: string
   tags: Tag[]
 }
 

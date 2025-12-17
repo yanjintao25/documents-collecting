@@ -25,7 +25,6 @@
       </el-upload>
 
       <el-form
-        :model="form"
         label-width="100px"
         style="margin-top: 20px"
         v-for="(file, index) in fileList"
@@ -41,23 +40,18 @@
             placeholder="请输入文档描述（可选）"
           />
         </el-form-item>
-        <el-form-item label="标签">
+        <el-form-item label="分类">
           <el-select
-            v-model="file.tag_ids"
-            multiple
-            placeholder="选择标签（可选）"
+            v-model="file.category_id"
+            placeholder="选择分类（可选）"
             style="width: 100%"
           >
             <el-option
-              v-for="tag in tags"
-              :key="tag.id"
-              :label="tag.name"
-              :value="tag.id"
-            >
-              <el-tag :color="tag.color" style="color: white">
-                {{ tag.name }}
-              </el-tag>
-            </el-option>
+              v-for="category in categories"
+              :key="category.id"
+              :label="category.name"
+              :value="category.id"
+            />
           </el-select>
         </el-form-item>
       </el-form>
@@ -77,34 +71,34 @@ import { ref, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { UploadFilled } from '@element-plus/icons-vue'
 import { documentApi } from '@/api/documents'
-import { useTagStore } from '@/stores/tag'
+import { useCategoryStore } from '@/stores/category'
 import type { UploadFile, UploadFiles } from 'element-plus'
-import type { Tag } from '@/types/tag'
+import type { Category } from '@/types/category'
 
 interface FileItem extends UploadFile {
   description?: string
-  tag_ids?: number[]
+  category_id?: number
 }
 
 const fileList = ref<FileItem[]>([])
-const tags = ref<Tag[]>([])
+const categories = ref<Category[]>([])
 const uploading = ref(false)
 
-const tagStore = useTagStore()
+const categoryStore = useCategoryStore()
 
 // 文件变化处理
-const handleFileChange = (file: UploadFile, files: UploadFiles) => {
+const handleFileChange = (_file: UploadFile, files: UploadFiles) => {
   fileList.value = files.map((f) => ({
     ...f,
     description: '',
-    tag_ids: [] as number[],
+    category_id: undefined,
   }))
 }
 
-// 加载标签
-const loadTags = async () => {
-  await tagStore.fetchTags()
-  tags.value = tagStore.tags
+// 加载分类
+const loadCategories = async () => {
+  await categoryStore.fetchCategories()
+  categories.value = categoryStore.categories
 }
 
 // 上传文件
@@ -123,8 +117,8 @@ const handleUpload = async () => {
       if (file.description) {
         formData.append('description', file.description)
       }
-      if (file.tag_ids && file.tag_ids.length > 0) {
-        formData.append('tag_ids', file.tag_ids.join(','))
+      if (file.category_id !== undefined && file.category_id !== null) {
+        formData.append('category_id', file.category_id.toString())
       }
       return documentApi.uploadDocument(formData)
     })
@@ -144,7 +138,7 @@ const handleUpload = async () => {
 }
 
 onMounted(() => {
-  loadTags()
+  loadCategories()
 })
 </script>
 

@@ -58,8 +58,13 @@
         @selection-change="handleSelectionChange"
       >
         <el-table-column type="selection" width="55" />
-        <el-table-column prop="id" label="ID" width="80" />
-        <el-table-column prop="original_filename" label="文件名" min-width="200" />
+        <el-table-column type="index" label="序号" width="80" :index="indexMethod" />
+        <el-table-column prop="title" label="文件名" min-width="200" />
+        <el-table-column prop="category_name" label="分类" width="120">
+          <template #default="{ row }">
+            {{ row.category_name || '-' }}
+          </template>
+        </el-table-column>
         <el-table-column label="标签" width="200">
           <template #default="{ row }">
             <el-tag
@@ -70,6 +75,7 @@
             >
               {{ tag.name }}
             </el-tag>
+            <span v-if="!row.tags || row.tags.length === 0">-</span>
           </template>
         </el-table-column>
         <el-table-column prop="file_size" label="大小" width="120">
@@ -77,9 +83,14 @@
             {{ formatFileSize(row.file_size) }}
           </template>
         </el-table-column>
-        <el-table-column prop="upload_time" label="上传时间" width="180">
+        <el-table-column prop="create_time" label="上传时间" width="180">
           <template #default="{ row }">
-            {{ formatDateTime(row.upload_time) }}
+            {{ formatDateTime(row.create_time) }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="description" label="描述" min-width="200" show-overflow-tooltip>
+          <template #default="{ row }">
+            {{ row.description || '-' }}
           </template>
         </el-table-column>
         <el-table-column label="操作" width="200" fixed="right">
@@ -145,7 +156,6 @@ import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Search } from '@element-plus/icons-vue'
 import { documentApi } from '@/api/documents'
-import { tagApi } from '@/api/tags'
 import { searchApi } from '@/api/search'
 import { pdfApi } from '@/api/pdf'
 import { useTagStore } from '@/stores/tag'
@@ -171,7 +181,7 @@ const tagStore = useTagStore()
 const loadDocuments = async () => {
   loading.value = true
   try {
-    const data = await documentApi.getDocuments()
+    const data = (await documentApi.getDocuments()) as unknown as Document[]
     documents.value = data
   } catch (error) {
     ElMessage.error('加载文档列表失败')
@@ -190,10 +200,10 @@ const loadTags = async () => {
 const handleSearch = async () => {
   loading.value = true
   try {
-    const data = await searchApi.searchDocuments({
+    const data = (await searchApi.searchDocuments({
       keyword: searchKeyword.value || undefined,
       tag_ids: selectedTags.value.length > 0 ? selectedTags.value : undefined,
-    })
+    })) as unknown as Document[]
     documents.value = data
   } catch (error) {
     ElMessage.error('搜索失败')
@@ -214,14 +224,19 @@ const handleSelectionChange = (selection: Document[]) => {
   selectedDocuments.value = selection.map((doc) => doc.id)
 }
 
+// 序号计算方法（从1开始）
+const indexMethod = (index: number) => {
+  return index + 1
+}
+
 // 下载文档
 const handleDownload = async (doc: Document) => {
   try {
-    const blob = await documentApi.downloadDocument(doc.id)
+    const blob = (await documentApi.downloadDocument(doc.id)) as unknown as Blob
     const url = window.URL.createObjectURL(blob)
     const link = document.createElement('a')
     link.href = url
-    link.download = doc.original_filename
+    link.download = doc.title
     link.click()
     window.URL.revokeObjectURL(url)
     ElMessage.success('下载成功')
@@ -281,10 +296,10 @@ const handleGeneratePDF = async () => {
   }
 
   try {
-    const blob = await pdfApi.generatePDF({
+    const blob = (await pdfApi.generatePDF({
       document_ids: selectedDocuments.value,
       title: '文档汇编',
-    })
+    })) as unknown as Blob
     const url = window.URL.createObjectURL(blob)
     const link = document.createElement('a')
     link.href = url

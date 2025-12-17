@@ -44,7 +44,6 @@ wheels/
 Thumbs.db
 
 # 项目特定
-uploads/
-generated_pdfs/
+files/
 *.log
 

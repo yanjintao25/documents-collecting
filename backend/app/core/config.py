@@ -22,8 +22,9 @@ class Settings(BaseSettings):
         db_path = self.BASE_DIR / "database" / "sqlite" / "documents_collecting.db"
         db_path.parent.mkdir(parents=True, exist_ok=True)
         return f"sqlite:///{db_path.as_posix()}"
-    UPLOAD_DIR: str = "uploads"
-    PDF_OUTPUT_DIR: str = "generated_pdfs"
+    UPLOAD_DIR: str = "files/uploads"
+    PDF_OUTPUT_DIR: str = "files/generated_pdfs"
+    PDF_COMPILATION_DIR: str = "files/compilations"
     MAX_UPLOAD_SIZE: int = 104857600  # 100MB
     
     # LibreOffice 配置
@@ -50,6 +51,13 @@ class Settings(BaseSettings):
     def pdf_output_dir_path(self) -> Path:
         """获取 PDF 输出目录路径"""
         path = self.BASE_DIR / self.PDF_OUTPUT_DIR
+        path.mkdir(parents=True, exist_ok=True)
+        return path
+    
+    @property
+    def pdf_compilation_dir_path(self) -> Path:
+        """获取 PDF 汇编目录路径"""
+        path = self.BASE_DIR / self.PDF_COMPILATION_DIR
         path.mkdir(parents=True, exist_ok=True)
         return path
     
